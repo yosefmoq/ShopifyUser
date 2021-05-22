@@ -1,18 +1,29 @@
 package com.app.shopifyuser.user;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.app.shopifyuser.R;
-import com.app.shopifyuser.adapters.MenuAdapter;
 import com.app.shopifyuser.model.Menu;
-import com.google.firebase.firestore.CollectionReference;
+import com.app.shopifyuser.shared.LocalSave;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.squareup.picasso.Picasso;
+
+import java.util.HashMap;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
@@ -23,11 +34,12 @@ public class OrderActivity extends AppCompatActivity {
     TextView tvTitle, tvDescription, tvNumber;
     ImageButton ibAdd, ibRemove;
     Menu menu;
+    private Button addToCartBtn;
 
-    FirebaseFirestore firebaseFirestore;
-    CollectionReference collectionReference;
-    MenuAdapter menuAdapter;
-    SweetAlertDialog sweetAlertDialog;
+    DocumentReference userRef;
+    //    CollectionReference collectionReference;
+//    MenuAdapter menuAdapter;
+//    SweetAlertDialog sweetAlertDialog;
     int quantity = 1;
 
     @Override
@@ -51,14 +63,129 @@ public class OrderActivity extends AppCompatActivity {
 
             }
         });
+
+        addToCartBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                SweetAlertDialog sweetAlertDialog = new SweetAlertDialog
+                        (OrderActivity.this, SweetAlertDialog.PROGRESS_TYPE);
+
+                sweetAlertDialog.setTitle("Adding to cart");
+                sweetAlertDialog.show();
+
+                if (userRef == null) {
+
+                    userRef = FirebaseFirestore.getInstance().collection("users")
+                            .document(String.valueOf(LocalSave.getInstance(OrderActivity.this)
+                                    .getCurrentUser().getId())
+                            );
+
+                }
+
+                userRef.collection("Cart").document(String.valueOf(menu.getId())).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot snapshot) {
+
+                        if (!snapshot.exists()) {
+
+                            final HashMap<String, Object> cartMap = new HashMap<>();
+                            cartMap.put("id", menu.getId());
+                            cartMap.put("quantity", quantity);
+
+//                            final CartItem cartItem = new CartItem(menu.getName(),menu.getId(),quantity);
+
+                            snapshot.getReference().set(cartMap).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+
+                                    final double price = menu.getPrice() * quantity;
+
+                                    userRef.update("cartTotal", FieldValue.increment(price))
+                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                @Override
+                                                public void onSuccess(Void aVoid) {
+                                                    sweetAlertDialog.dismiss();
+                                                    finish();
+                                                }
+                                            });
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+
+                                    sweetAlertDialog.dismiss();
+                                    Toast.makeText(OrderActivity.this,
+                                            "There was an error while trying to add to your cart!" +
+                                                    " Please try again", Toast.LENGTH_LONG).show();
+                                    Log.d("ttt", "adding to cart error: " + e.getMessage());
+
+                                }
+                            });
+
+                        } else {
+                            snapshot.getReference().update("quantity", FieldValue.increment(quantity))
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+
+                                            sweetAlertDialog.dismiss();
+                                            finish();
+
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+
+                                    sweetAlertDialog.dismiss();
+                                    Toast.makeText(OrderActivity.this,
+                                            "There was an error while trying to add to your cart!" +
+                                                    " Please try again", Toast.LENGTH_LONG).show();
+                                    Log.d("ttt", "updating cart item error: " + e.getMessage());
+
+                                }
+                            });
+                        }
+
+                    }
+                });
+
+//                        .update("id",menu.getId(),
+//                                "quantity", FieldValue.increment(quantity))
+//                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                            @Override
+//                            public void onSuccess(Void aVoid) {
+//
+//                                sweetAlertDialog.dismiss();
+//                                finish();
+//
+//                            }
+//                        }).addOnFailureListener(new OnFailureListener() {
+//                    @Override
+//                    public void onFailure(@NonNull Exception e) {
+//
+//                        sweetAlertDialog.dismiss();
+//                        Toast.makeText(OrderActivity.this,
+//                                "There was an error while trying to add to your cart!" +
+//                                        " Please try again", Toast.LENGTH_LONG).show();
+//                        Log.d("ttt","error: "+e.getMessage());
+//
+//                    }
+//                });
+
+
+            }
+        });
+
     }
 
     private void initItems() {
-        menu =MenuActivity.menus.get(getIntent().getIntExtra("position",0));
+        menu = MenuActivity.menus.get(getIntent().getIntExtra("position", 0));
         Picasso.get().load(menu.getImage());
         tvTitle.setText(menu.getName());
         tvDescription.setText(menu.getDescription());
     }
+
 
     private void initViews() {
         ivImage = findViewById(R.id.ivImage);
@@ -67,5 +194,8 @@ public class OrderActivity extends AppCompatActivity {
         tvNumber = findViewById(R.id.tvNumber);
         ibAdd = findViewById(R.id.ibPlus);
         ibRemove = findViewById(R.id.ibRemove);
+        addToCartBtn = findViewById(R.id.addToCartBtn);
     }
+
+
 }

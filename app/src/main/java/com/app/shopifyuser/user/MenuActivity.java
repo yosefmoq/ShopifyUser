@@ -1,11 +1,11 @@
 package com.app.shopifyuser.user;
 
+import android.os.Bundle;
+import android.util.Log;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.os.Bundle;
-import android.util.Log;
 
 import com.app.shopifyuser.R;
 import com.app.shopifyuser.adapters.MenuAdapter;
@@ -25,6 +25,8 @@ public class MenuActivity extends AppCompatActivity {
     CollectionReference collectionReference;
     MenuAdapter menuAdapter;
     SweetAlertDialog sweetAlertDialog;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,7 +37,10 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void initClicks() {
+
         sweetAlertDialog.show();
+
+
         collectionReference.whereEqualTo("resturant_id",getIntent().getIntExtra("id",0)).get().addOnCompleteListener(command -> {
             menus.clear();
             sweetAlertDialog.hide();
@@ -47,6 +52,7 @@ public class MenuActivity extends AppCompatActivity {
                 menuAdapter.notifyDataSetChanged();
             }
         });
+
 
     }
 
@@ -60,6 +66,9 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void initViews() {
+
         rvMenu = findViewById(R.id.rvMenu);
     }
+
+
 }

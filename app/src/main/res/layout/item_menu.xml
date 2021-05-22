@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -29,15 +28,13 @@
                 android:scaleType="centerCrop"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/resturant" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/tvMenuName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:text="Pizza"
                 app:layout_constraintStart_toEndOf="@+id/ivMenImage"
                 app:layout_constraintTop_toTopOf="@+id/ivMenImage" />
 
@@ -46,7 +43,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="10$"
                 app:layout_constraintStart_toStartOf="@+id/tvMenuName"
                 app:layout_constraintTop_toBottomOf="@+id/tvMenuName" />
 
@@ -60,6 +56,7 @@
                 android:textColor="@color/white"
                 app:layout_constraintStart_toStartOf="@+id/tvMenuPrice"
                 app:layout_constraintTop_toBottomOf="@+id/tvMenuPrice" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

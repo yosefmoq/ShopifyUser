@@ -1,14 +1,15 @@
 package com.app.shopifyuser.user;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatButton;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
+
 import com.app.shopifyuser.R;
+import com.app.shopifyuser.driver.DriverActivity;
 import com.app.shopifyuser.model.RigesterRequest;
 import com.app.shopifyuser.shared.LocalSave;
 import com.google.firebase.firestore.CollectionReference;
@@ -24,10 +25,12 @@ public class LoginActivity extends AppCompatActivity {
     FirebaseFirestore firebaseFirestore;
     CollectionReference collectionReference;
     String email,password;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
         initViews();
         initItems();
         initClicks();
@@ -54,10 +57,20 @@ public class LoginActivity extends AppCompatActivity {
         sweetAlertDialog.show();
         collectionReference.whereEqualTo("phoneNumber",email).whereEqualTo("password",password).limit(1).get().addOnCompleteListener(command -> {
             if(command.isSuccessful()){
-                if(command.getResult().getDocuments().size()>0){
+                if(command.getResult().getDocuments().size()>0) {
                     RigesterRequest rigesterRequest = command.getResult().getDocuments().get(0).toObject(RigesterRequest.class);
                     LocalSave.getInstance(LoginActivity.this).saveCurrentUser(rigesterRequest);
-                    startActivity(new Intent(LoginActivity.this,UserActivity.class));
+
+                    if (rigesterRequest.getType() == 1) {
+
+                        startActivity(new Intent(LoginActivity.this, UserActivity.class));
+                    } else {
+
+                        startActivity(new Intent(LoginActivity.this, DriverActivity.class));
+
+                    }
+
+
                     sweetAlertDialog.hide();
                     finishAffinity();
                 }else {
@@ -78,8 +91,11 @@ public class LoginActivity extends AppCompatActivity {
     private void initViews() {
         etUsername = findViewById(R.id.et_phoneNumber);
         etPassword = findViewById(R.id.et_password);
-        btnLogin   = findViewById(R.id.btn_signIn);
-        btnguest   = findViewById(R.id.btn_loginGuest);
+        btnLogin = findViewById(R.id.btn_signIn);
+        btnguest = findViewById(R.id.btn_loginGuest);
     }
 
+    private void forgotPassword() {
+
+    }
 }

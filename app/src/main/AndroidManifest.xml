@@ -16,7 +16,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ShopifyUser">
-        <activity android:name=".user.MenuActivity"></activity>
+        <activity android:name=".user.ActiveOrdersAcitivity"></activity>
+        <activity android:name=".driver.DriverRegisterationActivity" />
+        <activity android:name=".user.MenuActivity" />
         <activity android:name=".driver.DriverActivity" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
@@ -50,11 +52,13 @@
             </intent-filter>
         </activity>
         <activity android:name=".user.MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
         </activity>
     </application>
 

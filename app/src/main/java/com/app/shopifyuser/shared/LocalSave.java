@@ -14,7 +14,7 @@ public class LocalSave {
     private static final String IS_FIRST      = "isFirstTime";
 
     private static LocalSave instance = null;
-    private Context mContext;
+    private final Context mContext;
 
     private LocalSave(Context mContext) {
         this.mContext = mContext;
@@ -44,7 +44,6 @@ public class LocalSave {
     public boolean isFirstTime(){
         return SharedPrefs.getBoolean(getmContext(),IS_FIRST,true);
     }
-
 
 
     public void saveCurrentUser(RigesterRequest user) {

@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.shopifyuser.R;
 import com.app.shopifyuser.model.Resturant;
-import com.app.shopifyuser.user.DetailsActivity;
 import com.app.shopifyuser.user.MenuActivity;
-import com.app.shopifyuser.user.OrderActivity;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -42,8 +40,8 @@ public class ResturantAdapter extends RecyclerView.Adapter<ResturantAdapter.MyVi
         Resturant resturant = resturants.get(position);
         holder.tvResTime.setText(resturant.getTime());
         holder.tvResName.setText(resturant.getName());
-        Picasso.get().load(resturant.getImage()).into(holder.ivResImage);
-        holder.tvResCategory.setText(resturant.getCategory()+" Restaurant");
+        Picasso.get().load(resturant.getImage()).fit().centerCrop().into(holder.ivResImage);
+        holder.tvResCategory.setText(resturant.getCategory() + " Restaurant");
         holder.clResturant.setOnClickListener(v -> {
             context.startActivity(new Intent(context, MenuActivity.class).putExtra("id",resturant.getId()));
             Log.v("ttt",resturant.getId()+"");
