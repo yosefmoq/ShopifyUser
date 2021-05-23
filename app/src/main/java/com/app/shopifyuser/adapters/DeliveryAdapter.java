@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.shopifyuser.R;
+import com.app.shopifyuser.Utils.FullScreenImagesUtil;
 import com.app.shopifyuser.Utils.TimeFormatter;
 import com.app.shopifyuser.model.DeliveryOrder;
 import com.app.shopifyuser.user.CartInfoActivity;
@@ -107,6 +108,7 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.MyView
             showCartBtn.setOnClickListener(this);
             pickUpBtn.setOnClickListener(this);
             deliveredBtn.setOnClickListener(this);
+            userIv.setOnClickListener(this);
 
         }
 
@@ -138,6 +140,16 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.MyView
             } else if (v.getId() == deliveredBtn.getId()) {
 
                 deliveryStatusListener.setStatusDelivered(getAdapterPosition());
+
+            } else if (v.getId() == userIv.getId()) {
+
+
+                if (deliveryOrders.get(getAdapterPosition()).getUserImageUrl() != null) {
+
+                    FullScreenImagesUtil.showImageFullScreen(context,
+                            deliveryOrders.get(getAdapterPosition()).getUserImageUrl(), null);
+
+                }
 
             }
 

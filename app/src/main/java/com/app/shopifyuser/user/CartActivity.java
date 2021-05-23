@@ -344,8 +344,10 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.Remov
 
             bsd.dismiss();
 
-            startActivityForResult(new Intent(CartActivity.this, MapsActivity.class)
-                    , CHECKOUT_RESULT_KEY);
+            final Intent mapIntent = new Intent(CartActivity.this, MapsActivity.class);
+            mapIntent.putExtra("mapType", MapsActivity.MAP_TYPE_CURRENT_LOCATION);
+
+            startActivityForResult(mapIntent, CHECKOUT_RESULT_KEY);
 
         });
 

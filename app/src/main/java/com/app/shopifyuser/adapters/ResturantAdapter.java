@@ -14,6 +14,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.shopifyuser.R;
+import com.app.shopifyuser.Utils.FullScreenImagesUtil;
 import com.app.shopifyuser.model.Resturant;
 import com.app.shopifyuser.user.MenuActivity;
 import com.squareup.picasso.Picasso;
@@ -37,14 +38,24 @@ public class ResturantAdapter extends RecyclerView.Adapter<ResturantAdapter.MyVi
 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
+
         Resturant resturant = resturants.get(position);
         holder.tvResTime.setText(resturant.getTime());
         holder.tvResName.setText(resturant.getName());
         Picasso.get().load(resturant.getImage()).fit().centerCrop().into(holder.ivResImage);
+
+        holder.ivResImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FullScreenImagesUtil.showImageFullScreen(context, resturant.getImage(), null);
+            }
+        });
+
+
         holder.tvResCategory.setText(resturant.getCategory() + " Restaurant");
         holder.clResturant.setOnClickListener(v -> {
-            context.startActivity(new Intent(context, MenuActivity.class).putExtra("id",resturant.getId()));
-            Log.v("ttt",resturant.getId()+"");
+            context.startActivity(new Intent(context, MenuActivity.class).putExtra("id", resturant.getId()));
+            Log.v("ttt", resturant.getId() + "");
         });
     }
 

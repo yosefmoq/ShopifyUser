@@ -19,11 +19,17 @@ public class SplashActivity extends AppCompatActivity {
 
         if (LocalSave.getInstance(this).getCurrentUser() != null) {
 
-            if (LocalSave.getInstance(this).getCurrentUser().getType() == 1) {
-                startActivity(new Intent(this, UserActivity.class));
-            } else {
-                startActivity(new Intent(this, DriverActivity.class));
-            }
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (LocalSave.getInstance(SplashActivity.this).getCurrentUser().getType() == 1) {
+                        startActivity(new Intent(SplashActivity.this, UserActivity.class));
+                    } else {
+                        startActivity(new Intent(SplashActivity.this, DriverActivity.class));
+                    }
+                    finish();
+                }
+            }, 1000);
 
         } else {
 

@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.shopifyuser.R;
+import com.app.shopifyuser.Utils.FullScreenImagesUtil;
 import com.app.shopifyuser.model.CartItem;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -96,6 +97,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
             } else {
                 removeIv.setVisibility(View.GONE);
             }
+
+            itemIv.setOnClickListener(this);
             itemView.setOnClickListener(this);
 
         }
@@ -120,7 +123,11 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
                 });
 
 
-            } else {
+            } else if (v.getId() == itemIv.getId()) {
+
+
+                FullScreenImagesUtil.showImageFullScreen(context,
+                        cartItems.get(getAdapterPosition()).getImageUrl(), null);
 
 //                context.startActivity(new Intent(context, OrderActivity.class)
 //                        .putExtra("position", position));

@@ -13,9 +13,10 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.shopifyuser.R;
+import com.app.shopifyuser.Utils.FullScreenImagesUtil;
 import com.app.shopifyuser.model.Menu;
-import com.app.shopifyuser.user.DetailsActivity;
 import com.app.shopifyuser.user.OrderActivity;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -37,10 +38,20 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.MyViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
         Menu menu = menus.get(position);
+
+        Picasso.get().load(menu.getImage()).fit().centerCrop().into(holder.ivMenuImage);
+
+        holder.ivMenuImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FullScreenImagesUtil.showImageFullScreen(context, menu.getImage(), null);
+            }
+        });
+
         holder.tvMenuName.setText(menu.getName());
-        holder.tvMenuPrice.setText(menu.getPrice()+"$");
+        holder.tvMenuPrice.setText(menu.getPrice() + "$");
         holder.btnMenuOrder.setOnClickListener(v -> {
-            context.startActivity(new Intent(context, OrderActivity.class).putExtra("position",position));
+            context.startActivity(new Intent(context, OrderActivity.class).putExtra("position", position));
         });
     }
 
