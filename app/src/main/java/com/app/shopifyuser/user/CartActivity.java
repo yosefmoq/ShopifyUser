@@ -333,8 +333,10 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.Remov
 
             bsd.dismiss();
 
-            startActivityForResult(new Intent(CartActivity.this, MapsActivity.class)
-                    , CHECKOUT_RESULT_KEY);
+            final Intent mapIntent = new Intent(CartActivity.this, MapsActivity.class);
+            mapIntent.putExtra("mapType", MapsActivity.MAP_TYPE_CURRENT_LOCATION);
+
+            startActivityForResult(mapIntent, CHECKOUT_RESULT_KEY);
 
         });
 
@@ -362,7 +364,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.Remov
                 new SweetAlertDialog(CartActivity.this, SweetAlertDialog.PROGRESS_TYPE);
         sweetAlertDialog.setTitle("Checking out");
         sweetAlertDialog.setCancelable(false);
-
+        sweetAlertDialog.show();
 
         Query mainQuery = FirebaseFirestore.getInstance().collection("users")
                 .whereEqualTo("type", 2).orderBy("geohash");
@@ -385,16 +387,29 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.Remov
 
 //                List<DocumentSnapshot> inRangeDriverSnapshots = new ArrayList<>();
 
+                String driverId = null;
+
                 for (Task<QuerySnapshot> driverTask : tasks) {
 
                     if (!driverTask.getResult().getDocuments().isEmpty()) {
 //                            Log.d("ttt", "username for closets driver "+
 //                                    .getString("username"));
 
-                        final String driverId = driverTask.getResult().getDocuments().get(0).getId();
+                        driverId = driverTask.getResult().getDocuments().get(0).getId();
                         assignDeliveryToDriver(driverId, scheduleTime, chosenLatLng, sweetAlertDialog);
                         return;
                     }
+
+                }
+
+                if (driverId == null || driverId.isEmpty()) {
+
+                    sweetAlertDialog.dismiss();
+
+                    Toast.makeText(CartActivity.this, "Sorry we couldn't find " +
+                            "any driver in your area!" +
+                            "Please try again later", Toast.LENGTH_LONG).show();
+
 
                 }
             }
@@ -431,7 +446,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.Remov
                 new DeliveryOrder(deliveryUid, String.valueOf(currentUserId), id, scheduleTime,
                         System.currentTimeMillis(),
                         cartItemsMap, new GeoPoint(latLng.latitude, latLng.longitude)
-                        , totalPrice);
+                        , totalPrice, DeliveryOrder.STATUS_PENDING);
 
         FirebaseFirestore.getInstance().collection("Deliveries")
                 .document(deliveryUid).set(deliveryOrder).addOnSuccessListener(new OnSuccessListener<Void>() {

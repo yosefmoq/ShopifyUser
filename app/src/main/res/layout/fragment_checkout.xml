@@ -116,11 +116,25 @@
                 android:background="@drawable/btn_guest"
                 android:text="Schedule"
                 android:textAllCaps="false"
+                android:textAlignment="center"
                 android:textColor="@color/white"
                 android:layout_marginHorizontal="20dp"
                 android:layout_marginVertical="35dp"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/deliveryTimeSetterTv" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/orderNowBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:background="@drawable/btn_background"
+                android:text="Order Now"
+                android:textAlignment="center"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/confirmScheduleBtn" />
+
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>

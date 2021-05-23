@@ -23,36 +23,27 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.MyViewHolder> {
+public class DeliveryReceiptsAdapter extends RecyclerView.Adapter<DeliveryReceiptsAdapter.MyViewHolder> {
 
     private final Context context;
     private final ArrayList<DeliveryOrder> deliveryOrders;
     private final CollectionReference usersRef;
-    private final DeliveryStatusListener deliveryStatusListener;
 
-    public interface DeliveryStatusListener {
 
-        void setStatusPickedUp(int position);
-
-        void setStatusDelivered(int position);
-
-    }
-
-    public DeliveryAdapter(Context context, ArrayList<DeliveryOrder> deliveryOrders, DeliveryStatusListener deliveryStatusListener) {
+    public DeliveryReceiptsAdapter(Context context, ArrayList<DeliveryOrder> deliveryOrders) {
         this.context = context;
         this.deliveryOrders = deliveryOrders;
-        this.deliveryStatusListener = deliveryStatusListener;
         usersRef = FirebaseFirestore.getInstance().collection("users");
     }
 
     @NonNull
     @Override
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new MyViewHolder(LayoutInflater.from(context).inflate(R.layout.item_delivery, parent, false));
+        return new MyViewHolder(LayoutInflater.from(context).inflate(R.layout.item_delivery_receipt,
+                parent, false));
     }
 
     @Override
@@ -72,22 +63,20 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.MyView
 
     public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private final ImageView userIv, showLocationIv;
-        private final TextView nameTv, orderedAtTv, scheduledForTv, totalCostTv;
-        private final Button showCartBtn, pickUpBtn, deliveredBtn;
+        private final ImageView showLocationIv;
+        private final TextView nameTv, orderedAtTv, scheduledForTv, deliveredAtTv, totalCostTv;
+        private final Button showCartBtn;
 
 
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
-            userIv = itemView.findViewById(R.id.userIv);
             showLocationIv = itemView.findViewById(R.id.showLocationIv);
             nameTv = itemView.findViewById(R.id.nameTv);
             orderedAtTv = itemView.findViewById(R.id.orderedAtTv);
             scheduledForTv = itemView.findViewById(R.id.scheduledForTv);
+            deliveredAtTv = itemView.findViewById(R.id.deliveredAtTv);
             totalCostTv = itemView.findViewById(R.id.totalCostTv);
             showCartBtn = itemView.findViewById(R.id.showCartBtn);
-            pickUpBtn = itemView.findViewById(R.id.pickUpBtn);
-            deliveredBtn = itemView.findViewById(R.id.deliveredBtn);
         }
 
         private void bind(DeliveryOrder deliveryOrder) {
@@ -95,18 +84,25 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.MyView
             if (deliveryOrder.getUserName() == null) {
                 getUserInfo(deliveryOrder.getToUser(), getAdapterPosition(), this);
             } else {
-                Picasso.get().load(deliveryOrder.getUserImageUrl()).fit().centerCrop().into(userIv);
-                nameTv.setText(deliveryOrder.getUserName());
+                nameTv.setText("Delivered to: " + deliveryOrder.getUserName());
             }
 
-            orderedAtTv.setText(TimeFormatter.formatTime(deliveryOrder.getOrderedAt()));
-            scheduledForTv.setText(TimeFormatter.formatTime(deliveryOrder.getScheduledTime()));
+            orderedAtTv.setText("Ordered at: " +
+                    TimeFormatter.formatWithPattern(deliveryOrder.getOrderedAt(),
+                            TimeFormatter.MONTH_DAY_YEAR_HOUR_MINUTE));
+
+            scheduledForTv.setText("Scheduled for: " +
+                    TimeFormatter.formatWithPattern(deliveryOrder.getScheduledTime(),
+                            TimeFormatter.MONTH_DAY_YEAR_HOUR_MINUTE));
+
+            deliveredAtTv.setText("Delivered at: " +
+                    TimeFormatter.formatWithPattern(deliveryOrder.getDeliveredAt(),
+                            TimeFormatter.MONTH_DAY_YEAR_HOUR_MINUTE));
+
             totalCostTv.setText("Total cost: " + deliveryOrder.getTotalPrice() + "$");
 
             showLocationIv.setOnClickListener(this);
             showCartBtn.setOnClickListener(this);
-            pickUpBtn.setOnClickListener(this);
-            deliveredBtn.setOnClickListener(this);
 
         }
 
@@ -130,17 +126,7 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.MyView
                 context.startActivity(intent);
 
 
-            } else if (v.getId() == pickUpBtn.getId()) {
-
-                deliveryStatusListener.setStatusPickedUp(getAdapterPosition());
-
-
-            } else if (v.getId() == deliveredBtn.getId()) {
-
-                deliveryStatusListener.setStatusDelivered(getAdapterPosition());
-
             }
-
         }
     }
 
@@ -151,23 +137,11 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.MyView
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot snapshot) {
-
                         if (snapshot.exists()) {
-
-                            final String imageUrl = snapshot.getString("imageUrl");
                             final String username = snapshot.getString("username");
-
-
-                            deliveryOrders.get(pos).setUserImageUrl(imageUrl);
                             deliveryOrders.get(pos).setUserName(username);
-
-                            holder.nameTv.setText(username);
-                            if (imageUrl != null && !imageUrl.isEmpty()) {
-                                Picasso.get().load(imageUrl).fit().centerCrop().into(holder.userIv);
-                            }
-
+                            holder.nameTv.setText("Delivered to: " + username);
                         }
-
                     }
                 });
 

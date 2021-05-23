@@ -1,30 +1,33 @@
 package com.app.shopifyuser.user;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatButton;
-
 import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
+
 import com.app.shopifyuser.R;
 import com.app.shopifyuser.model.RigesterRequest;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class SignupActivity extends AppCompatActivity {
 
-    EditText etUsername, etPhonenumber, etPassword, etConfirmPassword;
+    EditText etUsername, etPhonenumber, et_email, etPassword, etConfirmPassword;
     RadioButton rbUser, rbDriver;
     RadioGroup rgType;
     TextView tvSignIn;
     AppCompatButton btnSignup;
     SweetAlertDialog sweetAlertDialog;
-    String username, phone, password, confirmPassword;
+    String username, phone, email, password, confirmPassword;
     int type = 1;
     FirebaseFirestore firebaseFirestore;
     CollectionReference collectionReference;
@@ -52,10 +55,11 @@ public class SignupActivity extends AppCompatActivity {
             finish();
         });
         btnSignup.setOnClickListener(v -> {
-            username = etUsername.getText().toString();
-            phone = etPhonenumber.getText().toString();
-            password = etPassword.getText().toString();
-            confirmPassword = etConfirmPassword.getText().toString();
+            username = etUsername.getText().toString().trim();
+            phone = etPhonenumber.getText().toString().trim();
+            email = et_email.getText().toString().trim();
+            password = etPassword.getText().toString().trim();
+            confirmPassword = etConfirmPassword.getText().toString().trim();
 
             if (username.equalsIgnoreCase("") || username.length() < 6) {
                 etUsername.setError("Please enter valid Username");
@@ -63,6 +67,10 @@ public class SignupActivity extends AppCompatActivity {
             }
             if (phone.equalsIgnoreCase("")) {
                 etPhonenumber.setError("Please enter valid phone number");
+                return;
+            }
+            if (email.equalsIgnoreCase("")) {
+                etPhonenumber.setError("Please enter a valid email");
                 return;
             }
             if (password.equalsIgnoreCase("") || password.length() < 6) {
@@ -81,36 +89,83 @@ public class SignupActivity extends AppCompatActivity {
         if (!sweetAlertDialog.isShowing())
             sweetAlertDialog.show();
         RigesterRequest rigesterRequest = new RigesterRequest();
-        collectionReference.get().addOnCompleteListener(command -> {
-            if (command.isSuccessful()) {
-                collectionReference.whereEqualTo("phoneNumber",phone).get().addOnCompleteListener(command1 -> {
-                    if(command1.getResult().getDocuments().size()>0){
-                        etPhonenumber.setError("Phone number exist");
-                        if(sweetAlertDialog.isShowing())
-                            sweetAlertDialog.hide();
-                    }else {
-                        int id = command.getResult().getDocuments()==null?0:command.getResult().getDocuments().size()+1;
-                        rigesterRequest.setId(id);
-                        rigesterRequest.setPhoneNumber(phone);
-                        rigesterRequest.setPassword(password);
-                        rigesterRequest.setUsername(username);
-                        rigesterRequest.setEmail("");
-                        rigesterRequest.setType(rbUser.isChecked()?1:2);
-                        collectionReference.document(id+"").set(rigesterRequest).addOnCompleteListener(command2 -> {
-                            if(command2.isSuccessful()){
-                                sweetAlertDialog.hide();
-                                finish();
+
+        collectionReference.whereEqualTo("phoneNumber", phone).limit(1)
+                .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+            @Override
+            public void onSuccess(QuerySnapshot snapshots) {
+
+                if (snapshots == null || snapshots.isEmpty()) {
+
+                    collectionReference.orderBy("id", Query.Direction.DESCENDING).limit(1)
+                            .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                        @Override
+                        public void onSuccess(QuerySnapshot snapshots) {
+
+                            int id;
+                            if (snapshots == null || snapshots.isEmpty()) {
+                                id = 1;
+                            } else {
+                                id = Integer.parseInt(snapshots.getDocuments().get(0).getId()) + 1;
                             }
-                        });
-                    }
-                });
+
+                            rigesterRequest.setId(id);
+                            rigesterRequest.setPhoneNumber(phone);
+                            rigesterRequest.setPassword(password);
+                            rigesterRequest.setUsername(username);
+                            rigesterRequest.setEmail(email);
+                            rigesterRequest.setType(rbUser.isChecked() ? 1 : 2);
+                            collectionReference.document(id + "").set(rigesterRequest)
+                                    .addOnCompleteListener(command2 -> {
+                                        if (command2.isSuccessful()) {
+                                            sweetAlertDialog.hide();
+                                            finish();
+                                        }
+                                    });
+
+                        }
+                    });
+
+                } else {
+                    etPhonenumber.setError("Phone number already exists");
+                    if (sweetAlertDialog.isShowing())
+                        sweetAlertDialog.hide();
+                }
+
             }
         });
+//
+//        collectionReference.get().addOnCompleteListener(command -> {
+//            if (command.isSuccessful()) {
+//                collectionReference.whereEqualTo("phoneNumber",phone).get().addOnCompleteListener(command1 -> {
+//                    if(command1.getResult().getDocuments().size()>0){
+//                        etPhonenumber.setError("Phone number exist");
+//                        if(sweetAlertDialog.isShowing())
+//                            sweetAlertDialog.hide();
+//                    }else {
+//                        int id = command.getResult().getDocuments()==null?0:command.getResult().getDocuments().size()+1;
+//                        rigesterRequest.setId(id);
+//                        rigesterRequest.setPhoneNumber(phone);
+//                        rigesterRequest.setPassword(password);
+//                        rigesterRequest.setUsername(username);
+//                        rigesterRequest.setEmail("");
+//                        rigesterRequest.setType(rbUser.isChecked()?1:2);
+//                        collectionReference.document(id+"").set(rigesterRequest).addOnCompleteListener(command2 -> {
+//                            if(command2.isSuccessful()){
+//                                sweetAlertDialog.hide();
+//                                finish();
+//                            }
+//                        });
+//                    }
+//                });
+//            }
+//        });
     }
 
     private void initViews() {
         etUsername = findViewById(R.id.et_username);
         etPhonenumber = findViewById(R.id.et_phoneNumber);
+        et_email = findViewById(R.id.et_email);
         etPassword = findViewById(R.id.et_password);
         etConfirmPassword = findViewById(R.id.et_confirmPassword);
         rbUser = findViewById(R.id.rbUser);

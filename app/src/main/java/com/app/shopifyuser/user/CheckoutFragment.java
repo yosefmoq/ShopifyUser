@@ -22,7 +22,7 @@ import java.util.Locale;
 public class CheckoutFragment extends DialogFragment implements View.OnClickListener {
 
     private TextView deliveryDateSetterTv, deliveryTimeSetterTv;
-    private Button confirmScheduleBtn;
+    private Button confirmScheduleBtn, orderNowBtn;
 
     //time
     private final Integer[] meetingStartTime = new Integer[5];
@@ -61,11 +61,13 @@ public class CheckoutFragment extends DialogFragment implements View.OnClickList
         deliveryDateSetterTv = view.findViewById(R.id.deliveryDateSetterTv);
         deliveryTimeSetterTv = view.findViewById(R.id.deliveryTimeSetterTv);
         confirmScheduleBtn = view.findViewById(R.id.confirmScheduleBtn);
+        orderNowBtn = view.findViewById(R.id.orderNowBtn);
 
 
         deliveryDateSetterTv.setOnClickListener(this);
         deliveryTimeSetterTv.setOnClickListener(this);
         confirmScheduleBtn.setOnClickListener(this);
+        orderNowBtn.setOnClickListener(this);
 
         return view;
     }
@@ -93,6 +95,10 @@ public class CheckoutFragment extends DialogFragment implements View.OnClickList
 //
 //                ((CartActivity)requireActivity()).checkOut(scheduleTime);
 //            }
+
+        } else if (v.getId() == orderNowBtn.getId()) {
+
+            scheduleDeliveryListener.confirmSchedule(System.currentTimeMillis());
 
         }
 

@@ -31,6 +31,8 @@ import cn.pedant.SweetAlert.SweetAlertDialog;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener,
         View.OnClickListener {
 
+
+    public static final int MAP_TYPE_CURRENT_LOCATION = 1, MAP_TYPE_MARK_LOCATION = 2;
     private static final int
             REQUEST_CHECK_SETTINGS = 100,
             REQUEST_LOCATION_PERMISSION = 10;
@@ -58,7 +60,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         confirmLocationBtn = findViewById(R.id.confirmLocationBtn);
-        confirmLocationBtn.setOnClickListener(this);
+
+        switch (getIntent().getIntExtra("mapType", 0)) {
+
+            case MAP_TYPE_CURRENT_LOCATION:
+                confirmLocationBtn.setOnClickListener(this);
+                break;
+
+            case MAP_TYPE_MARK_LOCATION:
+                confirmLocationBtn.setVisibility(View.GONE);
+                break;
+
+        }
 
     }
 
@@ -66,9 +79,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(@NotNull GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.setOnMapClickListener(this);
 
-        markCurrentPosition();
+
+        switch (getIntent().getIntExtra("mapType", 0)) {
+
+            case MAP_TYPE_CURRENT_LOCATION:
+
+                markCurrentPosition();
+                mMap.setOnMapClickListener(this);
+                break;
+
+            case MAP_TYPE_MARK_LOCATION:
+
+                final LatLng deliveryLatLng = getIntent().getParcelableExtra("deliveryLatLng");
+
+                LatLng currentLatLng = new LatLng(deliveryLatLng.latitude, deliveryLatLng.longitude);
+                currentMapMarker = mMap.addMarker(new MarkerOptions().position(currentLatLng).title("Delivery location"));
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLatLng));
+
+                break;
+
+        }
+
 
     }
 

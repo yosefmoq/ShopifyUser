@@ -22,17 +22,47 @@
             app:menu="@menu/main_menu"
             app:title="Shopify" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvRes"
-            android:layout_width="0dp"
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefreshLayout"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/mainToolbar"
-            tools:itemCount="10"
-            tools:listitem="@layout/item_resturant" />
+            app:layout_constraintTop_toBottomOf="@+id/mainToolbar">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <Spinner
+                    android:id="@+id/categorySpinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="20dp"
+                    android:background="@drawable/spinner_custom_layout"
+                    android:dropDownWidth="wrap_content"
+                    android:paddingEnd="8dp" />
+
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvRes"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="10dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/categorySpinner"
+                    tools:itemCount="10"
+                    tools:listitem="@layout/item_resturant" />
+
+            </LinearLayout>
+
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 
@@ -42,7 +72,7 @@
         android:layout_height="match_parent"
         android:background="@color/white"
         app:itemTextColor="@color/black"
-        app:menu="@menu/drawer_user_menu"
+        app:menu="@menu/drawer_driver_menu"
         app:headerLayout="@layout/user_drawer_header"
         android:layout_gravity="start" />
 

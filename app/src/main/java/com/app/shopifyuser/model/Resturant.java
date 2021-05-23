@@ -7,6 +7,10 @@ public class Resturant {
     private String time;
     private String image;
 
+    public Resturant() {
+
+    }
+
     public int getId() {
         return id;
     }

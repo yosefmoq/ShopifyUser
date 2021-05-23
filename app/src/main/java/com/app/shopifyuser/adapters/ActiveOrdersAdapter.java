@@ -1,6 +1,7 @@
 package com.app.shopifyuser.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.app.shopifyuser.R;
 import com.app.shopifyuser.Utils.TimeFormatter;
 import com.app.shopifyuser.model.DeliveryOrder;
+import com.app.shopifyuser.user.CartInfoActivity;
+import com.app.shopifyuser.user.MapsActivity;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
 
@@ -56,7 +61,7 @@ public class ActiveOrdersAdapter extends RecyclerView.Adapter<ActiveOrdersAdapte
     public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private final TextView orderedAtTv, scheduledAtTv, totalCostTv;
-        private final Button cancelOrderBtn;
+        private final Button showCartBtn;
         private final ImageView viewLocationIv;
 
         public MyViewHolder(@NonNull View itemView) {
@@ -64,19 +69,19 @@ public class ActiveOrdersAdapter extends RecyclerView.Adapter<ActiveOrdersAdapte
             orderedAtTv = itemView.findViewById(R.id.orderedAtTv);
             scheduledAtTv = itemView.findViewById(R.id.scheduledAtTv);
             totalCostTv = itemView.findViewById(R.id.totalCostTv);
-            cancelOrderBtn = itemView.findViewById(R.id.cancelOrderBtn);
+            showCartBtn = itemView.findViewById(R.id.showCartBtn);
             viewLocationIv = itemView.findViewById(R.id.viewLocationIv);
         }
 
         private void bind(DeliveryOrder deliveryOrder) {
 
-            orderedAtTv.setText(TimeFormatter.formatTime(deliveryOrder.getOrderedAt()));
-            scheduledAtTv.setText(TimeFormatter.formatTime(deliveryOrder.getScheduledTime()));
+            orderedAtTv.setText("Ordered at: " + TimeFormatter.formatTime(deliveryOrder.getOrderedAt()));
+            scheduledAtTv.setText("Scheduled for: " + TimeFormatter.formatTime(deliveryOrder.getScheduledTime()));
             totalCostTv.setText("Total cost: " + deliveryOrder.getTotalPrice() + "$");
 
 
             viewLocationIv.setOnClickListener(this);
-            cancelOrderBtn.setOnClickListener(this);
+            showCartBtn.setOnClickListener(this);
             itemView.setOnClickListener(this);
 
         }
@@ -86,16 +91,18 @@ public class ActiveOrdersAdapter extends RecyclerView.Adapter<ActiveOrdersAdapte
 
             if (v.getId() == viewLocationIv.getId()) {
 
-                cancelListener.removeCartItem(0, 0);
+                final GeoPoint geoPoint = deliveryOrders.get(getAdapterPosition()).getLocation();
+                final Intent mapIntent = new Intent(context, MapsActivity.class);
+                mapIntent.putExtra("mapType", MapsActivity.MAP_TYPE_MARK_LOCATION);
+                mapIntent.putExtra("deliveryLatLng",
+                        new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude()));
+                context.startActivity(mapIntent);
 
-            } else if (v.getId() == cancelOrderBtn.getId()) {
+            } else if (v.getId() == showCartBtn.getId()) {
 
-
-            } else {
-
-//                context.startActivity(new Intent(context, OrderActivity.class)
-//                        .putExtra("position", position));
-
+                final Intent intent = new Intent(context, CartInfoActivity.class);
+                intent.putExtra("cartId", deliveryOrders.get(getAdapterPosition()).getId());
+                context.startActivity(intent);
 
             }
 

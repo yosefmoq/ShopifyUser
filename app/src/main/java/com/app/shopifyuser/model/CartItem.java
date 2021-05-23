@@ -22,7 +22,7 @@ public class CartItem implements Serializable {
     public CartItem() {
     }
 
-    public CartItem(String name, int id, int quantity) {
+    public CartItem(int id, int quantity) {
         this.name = name;
         this.id = id;
         this.quantity = quantity;
@@ -32,6 +32,7 @@ public class CartItem implements Serializable {
         return name;
     }
 
+    @Exclude
     public void setName(String name) {
         this.name = name;
     }
@@ -56,6 +57,7 @@ public class CartItem implements Serializable {
         return imageUrl;
     }
 
+    @Exclude
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
@@ -64,6 +66,7 @@ public class CartItem implements Serializable {
         return price;
     }
 
+    @Exclude
     public void setPrice(double price) {
         this.price = price;
     }

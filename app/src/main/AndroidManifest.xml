@@ -16,7 +16,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ShopifyUser">
-        <activity android:name=".user.ActiveOrdersAcitivity"></activity>
+        <activity android:name=".user.ReportProblemsActivity"></activity>
+        <activity android:name=".driver.DriverProfileActivity" />
+        <activity android:name=".user.OrdersActivity" />
+        <activity android:name=".driver.DeliveriesReceiptsActivity" />
+        <activity android:name=".user.CartInfoActivity" />
+        <activity android:name=".user.ActiveOrdersAcitivity" />
         <activity android:name=".driver.DriverRegisterationActivity" />
         <activity android:name=".user.MenuActivity" />
         <activity android:name=".driver.DriverActivity" />

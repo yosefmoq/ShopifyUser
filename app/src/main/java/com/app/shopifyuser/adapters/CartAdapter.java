@@ -29,7 +29,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
     ArrayList<CartItem> cartItems;
     private final CollectionReference menuRef;
     //    private DocumentReference userRef;
-    private final RemoveCartItemListener removeListener;
+    private RemoveCartItemListener removeListener;
 
     public interface RemoveCartItemListener {
         Task<Void> removeCartItem(int itemId, int position);
@@ -41,6 +41,13 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
         menuRef = FirebaseFirestore.getInstance().collection("menus");
         this.removeListener = removeListener;
     }
+
+    public CartAdapter(Context context, ArrayList<CartItem> cartItems) {
+        this.context = context;
+        this.cartItems = cartItems;
+        menuRef = FirebaseFirestore.getInstance().collection("menus");
+    }
+
 
     @NonNull
     @Override
@@ -84,7 +91,11 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
                 getMenuItemInfo(cartItem.getId(), getAdapterPosition(), this);
             }
 
-            removeIv.setOnClickListener(this);
+            if (removeListener != null) {
+                removeIv.setOnClickListener(this);
+            } else {
+                removeIv.setVisibility(View.GONE);
+            }
             itemView.setOnClickListener(this);
 
         }

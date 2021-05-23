@@ -5,7 +5,7 @@
 
     <item
         android:id="@+id/activeOrders"
-        android:title="Active Orders"
+        android:title="Orders and receipts"
         android:icon="@drawable/ic_active_orders"
         app:showAsAction="always" />
 

@@ -4,27 +4,27 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".user.ActiveOrdersAcitivity">
+    tools:context=".driver.DeliveriesReceiptsActivity">
 
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/activeToolbar"
+        android:id="@+id/receiptsToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary_color"
         app:titleTextColor="@color/white"
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/ic_back_arrow"
-        app:title="Active Orders" />
+        app:title="Delivery receipts" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activeToolbar">
+        app:layout_constraintTop_toBottomOf="@+id/receiptsToolbar">
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/activeOrdersRv"
+            android:id="@+id/deliveriesReceiptsRv"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"

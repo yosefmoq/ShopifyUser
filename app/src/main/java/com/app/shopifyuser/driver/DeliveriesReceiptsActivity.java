@@ -1,6 +1,7 @@
-package com.app.shopifyuser.user;
+package com.app.shopifyuser.driver;
 
 import android.os.Bundle;
+import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,86 +10,91 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.app.shopifyuser.R;
-import com.app.shopifyuser.adapters.ActiveOrdersAdapter;
+import com.app.shopifyuser.adapters.DeliveryReceiptsAdapter;
 import com.app.shopifyuser.model.DeliveryOrder;
 import com.app.shopifyuser.shared.LocalSave;
+import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
-public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener,
-        ActiveOrdersAdapter.CancelOrderListener {
+public class DeliveriesReceiptsActivity extends AppCompatActivity implements
+        NavigationView.OnNavigationItemSelectedListener,
+        SwipeRefreshLayout.OnRefreshListener {
 
-
-    private static final int ORDERS_PAGE_LIMIT = 10;
     private int currentUserId;
 
+    private static final int RECEIPTS_PAGE_LIMIT = 10;
 
     //items
     private ArrayList<DeliveryOrder> deliveryOrders;
-    private ActiveOrdersAdapter activeOrdersAdapter;
+    private DeliveryReceiptsAdapter deliveryReceiptsAdapter;
     private ScrollListener scrollListener;
-
 
     //views
     private SweetAlertDialog sweetAlertDialog;
-    private Toolbar activeToolbar;
-    private RecyclerView activeOrdersRv;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private Toolbar receiptsToolbar;
+    private RecyclerView deliveriesReceiptsRv;
 
+    //firebase
     private Query deliveryQuery;
     private DocumentSnapshot lastDocSnap;
     private boolean isLoadingDeliveryItems;
-
+    private CollectionReference deliveriesRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_active_orders);
-
+        setContentView(R.layout.activity_deliveries_receipts);
 
         initViews();
-        initItems();
+        initItem();
         initClicks();
-
 
     }
 
     private void initViews() {
-        activeToolbar = findViewById(R.id.activeToolbar);
-        activeOrdersRv = findViewById(R.id.activeOrdersRv);
+
+        receiptsToolbar = findViewById(R.id.receiptsToolbar);
+        deliveriesReceiptsRv = findViewById(R.id.deliveriesReceiptsRv);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+
     }
 
 
-    private void initItems() {
+    private void initClicks() {
+        receiptsToolbar.setNavigationOnClickListener(v -> finish());
+        swipeRefreshLayout.setOnRefreshListener(this);
+    }
+
+    private void initItem() {
 
         sweetAlertDialog = new SweetAlertDialog(this, SweetAlertDialog.PROGRESS_TYPE);
         sweetAlertDialog.setCancelable(false);
         sweetAlertDialog.show();
 
+
         currentUserId = LocalSave.getInstance(this).getCurrentUser().getId();
 
+
+        deliveriesRef = FirebaseFirestore.getInstance().collection("Deliveries");
+
         deliveryOrders = new ArrayList<>();
-        activeOrdersAdapter = new ActiveOrdersAdapter(this, deliveryOrders, this);
-        activeOrdersRv.setAdapter(activeOrdersAdapter);
+        deliveryReceiptsAdapter = new DeliveryReceiptsAdapter(this, deliveryOrders);
+        deliveriesReceiptsRv.setAdapter(deliveryReceiptsAdapter);
 
-        final List<Integer> activeStates = new ArrayList<>(2);
-        activeStates.add(DeliveryOrder.STATUS_PENDING);
-        activeStates.add(DeliveryOrder.STATUS_PICKUP);
-
-        deliveryQuery = FirebaseFirestore.getInstance().collection("Deliveries")
-                .whereEqualTo("toUser", String.valueOf(currentUserId))
-                .whereIn("status", activeStates)
-                .limit(ORDERS_PAGE_LIMIT);
+        deliveryQuery =
+                deliveriesRef.whereEqualTo("byUser", String.valueOf(currentUserId))
+                        .whereEqualTo("status", DeliveryOrder.STATUS_DELIVERED)
+                        .limit(RECEIPTS_PAGE_LIMIT);
 
         getMoreDeliveries(true);
-
 
     }
 
@@ -108,8 +114,7 @@ public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRef
             if (!queryDocumentSnapshots.isEmpty()) {
 
                 lastDocSnap = queryDocumentSnapshots.getDocuments().get(
-                        queryDocumentSnapshots.size() - 1
-                );
+                        queryDocumentSnapshots.size() - 1);
 
                 if (isInitial) {
                     deliveryOrders.addAll(queryDocumentSnapshots.toObjects(DeliveryOrder.class));
@@ -121,21 +126,25 @@ public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRef
         }).addOnCompleteListener(task -> {
             if (isInitial) {
 
-                activeOrdersAdapter.notifyDataSetChanged();
+                deliveryReceiptsAdapter.notifyDataSetChanged();
 
+                if (task.getResult().size() == RECEIPTS_PAGE_LIMIT && scrollListener == null) {
+                    deliveriesReceiptsRv.addOnScrollListener(scrollListener = new ScrollListener());
+                }
 
-                if (task.getResult().size() == ORDERS_PAGE_LIMIT && scrollListener == null) {
-                    activeOrdersRv.addOnScrollListener(scrollListener = new ScrollListener());
+                if (deliveryOrders.isEmpty()) {
+                    swipeRefreshLayout.setRefreshing(false);
+                    sweetAlertDialog.dismiss();
                 }
 
             } else {
 
                 final int resultSize = task.getResult().size();
 
-                activeOrdersAdapter.notifyItemRangeInserted(
+                deliveryReceiptsAdapter.notifyItemRangeInserted(
                         deliveryOrders.size() - resultSize, resultSize);
-                if (resultSize < ORDERS_PAGE_LIMIT && scrollListener != null) {
-                    activeOrdersRv.removeOnScrollListener(scrollListener);
+                if (resultSize < RECEIPTS_PAGE_LIMIT && scrollListener != null) {
+                    deliveriesReceiptsRv.removeOnScrollListener(scrollListener);
                 }
             }
 
@@ -149,7 +158,11 @@ public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRef
     }
 
     @Override
-    public void removeCartItem(int itemId, int position) {
+    public void onRefresh() {
+        deliveryOrders.clear();
+        deliveryReceiptsAdapter.notifyDataSetChanged();
+        lastDocSnap = null;
+        getMoreDeliveries(true);
     }
 
     private class ScrollListener extends RecyclerView.OnScrollListener {
@@ -167,19 +180,8 @@ public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRef
     }
 
 
-    private void initClicks() {
-        activeToolbar.setNavigationOnClickListener(v -> finish());
-        swipeRefreshLayout.setOnRefreshListener(this);
-    }
-
-
     @Override
-    public void onRefresh() {
-
-        deliveryOrders.clear();
-        activeOrdersAdapter.notifyDataSetChanged();
-        lastDocSnap = null;
-        getMoreDeliveries(true);
-
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        return false;
     }
 }

@@ -17,6 +17,7 @@
             android:layout_height="wrap_content"
             android:background="@color/accent_color"
             app:titleTextColor="@color/white"
+            app:menu="@menu/dirver_main_menu"
             app:layout_constraintTop_toTopOf="parent"
             app:navigationIcon="@drawable/ic_menu"
             app:title="Shopify" />
@@ -48,7 +49,7 @@
         android:layout_height="match_parent"
         android:background="@color/white"
         app:itemTextColor="@color/black"
-        app:menu="@menu/drawer_user_menu"
+        app:menu="@menu/drawer_driver_menu"
         app:headerLayout="@layout/user_drawer_header"
         android:layout_gravity="start" />
 

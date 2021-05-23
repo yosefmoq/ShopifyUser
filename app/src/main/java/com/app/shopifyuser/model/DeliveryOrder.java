@@ -1,5 +1,6 @@
 package com.app.shopifyuser.model;
 
+import com.google.firebase.firestore.Exclude;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.IgnoreExtraProperties;
 
@@ -10,28 +11,40 @@ import java.util.Map;
 @IgnoreExtraProperties
 public class DeliveryOrder implements Serializable {
 
+    public static final int STATUS_PENDING = 1, STATUS_PICKUP = 2, STATUS_DELIVERED = 3, STATUS_CANCELLED = 4;
+
+
     private String id;
     private String byUser;
     private String toUser;
     private long scheduledTime;
     private long orderedAt;
+    private long deliveredAt;
     private List<Map<String, Integer>> orders;
     private GeoPoint location;
     private double totalPrice;
+    private int status;
+
+    @Exclude
+    private String userImageUrl;
+    @Exclude
+    private String userName;
 
 
     public DeliveryOrder() {
     }
 
-    public DeliveryOrder(String id, String toUser, String byUser, long scheduledTime, long orderedAt, List<Map<String, Integer>> orders, GeoPoint location, double totalPrice) {
+    public DeliveryOrder(String id, String toUser, String byUser, long scheduledTime, long orderedAt,
+                         List<Map<String, Integer>> orders, GeoPoint location, double totalPrice, int status) {
         this.id = id;
         this.toUser = toUser;
         this.byUser = byUser;
         this.scheduledTime = scheduledTime;
         this.orderedAt = orderedAt;
-        this.orders = orders;
         this.location = location;
         this.totalPrice = totalPrice;
+        this.orders = orders;
+        this.status = status;
     }
 
     public String getId() {
@@ -96,5 +109,41 @@ public class DeliveryOrder implements Serializable {
 
     public void setByUser(String byUser) {
         this.byUser = byUser;
+    }
+
+    @Exclude
+    public String getUserImageUrl() {
+        return userImageUrl;
+    }
+
+    @Exclude
+    public void setUserImageUrl(String userImageUrl) {
+        this.userImageUrl = userImageUrl;
+    }
+
+    @Exclude
+    public String getUserName() {
+        return userName;
+    }
+
+    @Exclude
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public long getDeliveredAt() {
+        return deliveredAt;
+    }
+
+    public void setDeliveredAt(long deliveredAt) {
+        this.deliveredAt = deliveredAt;
     }
 }

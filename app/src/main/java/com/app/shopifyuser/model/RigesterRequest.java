@@ -12,6 +12,7 @@ public class RigesterRequest {
     private String username;
 
     private String phoneNumber;
+
     private int type;
 
     public int getType() {

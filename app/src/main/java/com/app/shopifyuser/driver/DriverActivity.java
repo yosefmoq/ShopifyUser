@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,17 +24,21 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.app.shopifyuser.R;
-import com.app.shopifyuser.adapters.ActiveOrdersAdapter;
+import com.app.shopifyuser.adapters.DeliveryAdapter;
 import com.app.shopifyuser.model.DeliveryOrder;
 import com.app.shopifyuser.shared.LocalSave;
 import com.app.shopifyuser.user.LoginActivity;
+import com.app.shopifyuser.user.ReportProblemsActivity;
 import com.firebase.geofire.GeoFireUtils;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -41,13 +46,16 @@ import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class DriverActivity extends AppCompatActivity implements LocationListener,
         Toolbar.OnMenuItemClickListener,
-        NavigationView.OnNavigationItemSelectedListener {
+        NavigationView.OnNavigationItemSelectedListener,
+        DeliveryAdapter.DeliveryStatusListener,
+        SwipeRefreshLayout.OnRefreshListener {
 
     private int currentUserId;
 
@@ -60,7 +68,7 @@ public class DriverActivity extends AppCompatActivity implements LocationListene
 
     //items
     private ArrayList<DeliveryOrder> deliveryOrders;
-    private ActiveOrdersAdapter activeOrdersAdapter;
+    private DeliveryAdapter deliveryAdapter;
     private ScrollListener scrollListener;
 
     //    private static final int SEARCH_RADIUS
@@ -70,18 +78,17 @@ public class DriverActivity extends AppCompatActivity implements LocationListene
     //views
     private SweetAlertDialog sweetAlertDialog;
     private SwipeRefreshLayout swipeRefreshLayout;
-
-
-    //views
     private Toolbar mainToolbar;
     private DrawerLayout drawer_layout;
     private NavigationView navigationView;
     private RecyclerView deliveryRv;
 
 
+    //firebase
     private Query deliveryQuery;
     private DocumentSnapshot lastDocSnap;
     private boolean isLoadingDeliveryItems;
+    private CollectionReference deliveriesRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -168,7 +175,7 @@ public class DriverActivity extends AppCompatActivity implements LocationListene
         mainToolbar.setNavigationOnClickListener(v -> showDrawer());
         mainToolbar.setOnMenuItemClickListener(this);
         navigationView.setNavigationItemSelectedListener(this);
-
+        swipeRefreshLayout.setOnRefreshListener(this);
 
     }
 
@@ -183,16 +190,21 @@ public class DriverActivity extends AppCompatActivity implements LocationListene
         currentUserId = LocalSave.getInstance(this).getCurrentUser().getId();
 
 
+        deliveriesRef = FirebaseFirestore.getInstance().collection("Deliveries");
         userRef = FirebaseFirestore.getInstance().collection("users")
                 .document(String.valueOf(currentUserId));
 
         deliveryOrders = new ArrayList<>();
-        activeOrdersAdapter = new ActiveOrdersAdapter(this, deliveryOrders, null);
-        deliveryRv.setAdapter(activeOrdersAdapter);
+        deliveryAdapter = new DeliveryAdapter(this, deliveryOrders, this);
+        deliveryRv.setAdapter(deliveryAdapter);
 
 
-        deliveryQuery = FirebaseFirestore.getInstance().collection("Deliveries")
-                .whereEqualTo("byUser", String.valueOf(currentUserId))
+        final List<Integer> allowedStates = new ArrayList<>(2);
+        allowedStates.add(DeliveryOrder.STATUS_PENDING);
+        allowedStates.add(DeliveryOrder.STATUS_PICKUP);
+
+        deliveryQuery = deliveriesRef.whereEqualTo("byUser", String.valueOf(currentUserId))
+                .whereIn("status", allowedStates)
                 .limit(ORDERS_PAGE_LIMIT);
 
         getMoreDeliveries(true);
@@ -226,8 +238,7 @@ public class DriverActivity extends AppCompatActivity implements LocationListene
             if (!queryDocumentSnapshots.isEmpty()) {
 
                 lastDocSnap = queryDocumentSnapshots.getDocuments().get(
-                        queryDocumentSnapshots.size() - 1
-                );
+                        queryDocumentSnapshots.size() - 1);
 
                 if (isInitial) {
                     deliveryOrders.addAll(queryDocumentSnapshots.toObjects(DeliveryOrder.class));
@@ -239,7 +250,7 @@ public class DriverActivity extends AppCompatActivity implements LocationListene
         }).addOnCompleteListener(task -> {
             if (isInitial) {
 
-                activeOrdersAdapter.notifyDataSetChanged();
+                deliveryAdapter.notifyDataSetChanged();
 
                 if (task.getResult().size() == ORDERS_PAGE_LIMIT && scrollListener == null) {
                     deliveryRv.addOnScrollListener(scrollListener = new ScrollListener());
@@ -254,7 +265,7 @@ public class DriverActivity extends AppCompatActivity implements LocationListene
 
                 final int resultSize = task.getResult().size();
 
-                activeOrdersAdapter.notifyItemRangeInserted(
+                deliveryAdapter.notifyItemRangeInserted(
                         deliveryOrders.size() - resultSize, resultSize);
                 if (resultSize < ORDERS_PAGE_LIMIT && scrollListener != null) {
                     deliveryRv.removeOnScrollListener(scrollListener);
@@ -267,6 +278,75 @@ public class DriverActivity extends AppCompatActivity implements LocationListene
             isLoadingDeliveryItems = false;
         });
 
+
+    }
+
+    @Override
+    public void setStatusPickedUp(int position) {
+
+        if (position < deliveryOrders.size()) {
+
+            final String id = deliveryOrders.get(position).getId();
+
+            if (id == null || id.isEmpty())
+                return;
+
+            deliveriesRef.document(id)
+                    .update("status", DeliveryOrder.STATUS_PICKUP).addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+
+                    Toast.makeText(DriverActivity.this, "Delivery was picked up!",
+                            Toast.LENGTH_SHORT).show();
+
+                }
+            });
+
+        }
+
+    }
+
+    @Override
+    public void setStatusDelivered(int position) {
+
+
+        sweetAlertDialog = new SweetAlertDialog(this, SweetAlertDialog.PROGRESS_TYPE);
+        sweetAlertDialog.setTitle("Marking as delivered!");
+        sweetAlertDialog.setCancelable(false);
+        sweetAlertDialog.show();
+
+
+        deliveriesRef.document(deliveryOrders.get(position).getId())
+                .update("status", DeliveryOrder.STATUS_DELIVERED,
+                        "deliveredAt", System.currentTimeMillis())
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+
+                        deliveryOrders.remove(position);
+                        deliveryAdapter.notifyItemRemoved(position);
+
+                        sweetAlertDialog.dismiss();
+
+                        Toast.makeText(DriverActivity.this,
+                                "Delivery receipt created!", Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                sweetAlertDialog.dismiss();
+            }
+        });
+
+    }
+
+    @Override
+    public void onRefresh() {
+
+        deliveryOrders.clear();
+        deliveryAdapter.notifyDataSetChanged();
+        lastDocSnap = null;
+        getMoreDeliveries(true);
 
     }
 
@@ -339,10 +419,20 @@ public class DriverActivity extends AppCompatActivity implements LocationListene
 
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        ((LocationManager)
+                getSystemService(Context.LOCATION_SERVICE)).removeUpdates(this);
+
+
+    }
+
+    @Override
     public boolean onMenuItemClick(MenuItem item) {
 
-        if (item.getItemId() == R.id.showCart) {
-//            startActivity(new Intent(Driver.this, CartActivity.class));
+        if (item.getItemId() == R.id.showReceipts) {
+            startActivity(new Intent(this, DeliveriesReceiptsActivity.class));
         }
 
         return false;
@@ -355,8 +445,17 @@ public class DriverActivity extends AppCompatActivity implements LocationListene
 
             LocalSave.getInstance(this).clear();
             startActivity(new Intent(this, LoginActivity.class));
+
+            ((LocationManager)
+                    getSystemService(Context.LOCATION_SERVICE)).removeUpdates(this);
+
+
             finish();
 
+        } else if (item.getItemId() == R.id.editDriverProfile) {
+            startActivity(new Intent(this, DriverProfileActivity.class));
+        } else if (item.getItemId() == R.id.reportProblem) {
+            startActivity(new Intent(this, ReportProblemsActivity.class));
         }
 
         return true;

@@ -1,10 +1,13 @@
 package com.app.shopifyuser.user;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -21,12 +24,11 @@ import java.util.List;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
-public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener,
+
+public class ActiveOrdersFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener,
         ActiveOrdersAdapter.CancelOrderListener {
 
-
     private static final int ORDERS_PAGE_LIMIT = 10;
-    private int currentUserId;
 
 
     //items
@@ -37,7 +39,6 @@ public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRef
 
     //views
     private SweetAlertDialog sweetAlertDialog;
-    private Toolbar activeToolbar;
     private RecyclerView activeOrdersRv;
     private SwipeRefreshLayout swipeRefreshLayout;
 
@@ -46,37 +47,23 @@ public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRef
     private boolean isLoadingDeliveryItems;
 
 
+    public ActiveOrdersFragment() {
+    }
+
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_active_orders);
 
 
-        initViews();
-        initItems();
-        initClicks();
-
-
-    }
-
-    private void initViews() {
-        activeToolbar = findViewById(R.id.activeToolbar);
-        activeOrdersRv = findViewById(R.id.activeOrdersRv);
-        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
-    }
-
-
-    private void initItems() {
-
-        sweetAlertDialog = new SweetAlertDialog(this, SweetAlertDialog.PROGRESS_TYPE);
+        sweetAlertDialog = new SweetAlertDialog(requireContext(), SweetAlertDialog.PROGRESS_TYPE);
         sweetAlertDialog.setCancelable(false);
         sweetAlertDialog.show();
 
-        currentUserId = LocalSave.getInstance(this).getCurrentUser().getId();
+        int currentUserId = LocalSave.getInstance(requireContext()).getCurrentUser().getId();
 
         deliveryOrders = new ArrayList<>();
-        activeOrdersAdapter = new ActiveOrdersAdapter(this, deliveryOrders, this);
-        activeOrdersRv.setAdapter(activeOrdersAdapter);
+        activeOrdersAdapter = new ActiveOrdersAdapter(requireContext(), deliveryOrders, this);
 
         final List<Integer> activeStates = new ArrayList<>(2);
         activeStates.add(DeliveryOrder.STATUS_PENDING);
@@ -86,6 +73,28 @@ public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRef
                 .whereEqualTo("toUser", String.valueOf(currentUserId))
                 .whereIn("status", activeStates)
                 .limit(ORDERS_PAGE_LIMIT);
+
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_active_orders, container, false);
+
+        activeOrdersRv = view.findViewById(R.id.ordersRv);
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+
+        activeOrdersRv.setAdapter(activeOrdersAdapter);
+
+        swipeRefreshLayout.setOnRefreshListener(this);
+
+        return view;
+    }
+
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         getMoreDeliveries(true);
 
@@ -148,9 +157,6 @@ public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRef
 
     }
 
-    @Override
-    public void removeCartItem(int itemId, int position) {
-    }
 
     private class ScrollListener extends RecyclerView.OnScrollListener {
         @Override
@@ -167,12 +173,6 @@ public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRef
     }
 
 
-    private void initClicks() {
-        activeToolbar.setNavigationOnClickListener(v -> finish());
-        swipeRefreshLayout.setOnRefreshListener(this);
-    }
-
-
     @Override
     public void onRefresh() {
 
@@ -180,6 +180,11 @@ public class ActiveOrdersAcitivity extends AppCompatActivity implements SwipeRef
         activeOrdersAdapter.notifyDataSetChanged();
         lastDocSnap = null;
         getMoreDeliveries(true);
+
+    }
+
+    @Override
+    public void removeCartItem(int itemId, int position) {
 
     }
 }
